@@ -100,7 +100,7 @@ class Quote {
   /**
    * Allow Quote to be converted to/from other blocks
    */
-  static get conversionConfig(){
+  static get conversionConfig() {
     return {
       /**
        * To create Quote data from string, simple fill 'text' property
@@ -161,8 +161,8 @@ class Quote {
    *   config - user config for Tool
    *   api - Editor.js API
    */
-  constructor({data, config, api}) {
-    const {ALIGNMENTS, DEFAULT_ALIGNMENT} = Quote;
+  constructor({ data, config, api }) {
+    const { ALIGNMENTS, DEFAULT_ALIGNMENT } = Quote;
 
     this.api = api;
 
@@ -173,8 +173,8 @@ class Quote {
       text: data.text || '',
       caption: data.caption || '',
       alignment: Object.values(ALIGNMENTS).includes(data.alignment) && data.alignment ||
-      config.defaultAlignment ||
-      DEFAULT_ALIGNMENT
+        config.defaultAlignment ||
+        DEFAULT_ALIGNMENT
     };
   }
 
@@ -197,10 +197,33 @@ class Quote {
     quote.dataset.placeholder = this.quotePlaceholder;
     caption.dataset.placeholder = this.captionPlaceholder;
 
+    this._bindPasteEvent(quote);
+    this._bindPasteEvent(caption);
+
     container.appendChild(quote);
     container.appendChild(caption);
 
     return container;
+  }
+
+  _bindPasteEvent(node) {
+    node.addEventListener('paste', function (e) {
+      e.preventDefault();
+      if (!(e.clipboardData && e.clipboardData.items)) return;
+
+      for (var i = 0, len = e.clipboardData.items.length; i < len; i++) {
+        var item = e.clipboardData.items[i];
+        if (item.kind === 'string' && item.type === 'text/plain') {
+          item.getAsString(function (str) {
+            document.execCommand('insertText', false, str)
+          });
+        };
+      };
+    });
+  }
+
+  static get pasteConfig() {
+    return false;
   }
 
   /**
@@ -226,9 +249,11 @@ class Quote {
     return {
       text: {
         br: true,
+        div: true
       },
       caption: {
         br: true,
+        div: true
       },
       alignment: {}
     };
@@ -242,11 +267,11 @@ class Quote {
    * @returns {HTMLDivElement}
    */
   renderSettings() {
-    const wrapper = this._make('div', [ this.CSS.settingsWrapper ], {});
+    const wrapper = this._make('div', [this.CSS.settingsWrapper], {});
     const capitalize = str => str[0].toUpperCase() + str.substr(1);
 
     this.settings
-      .map( tune => {
+      .map(tune => {
         const el = this._make('div', this.CSS.settingsButton, {
           innerHTML: tune.icon,
           title: `${capitalize(tune.name)} alignment`
@@ -263,7 +288,7 @@ class Quote {
           this._toggleTune(this.settings[index].name);
 
           elements.forEach((el, i) => {
-            const {name} = this.settings[i];
+            const { name } = this.settings[i];
 
             el.classList.toggle(this.CSS.settingsButtonActive, name === this.data.alignment);
           });
@@ -294,9 +319,9 @@ class Quote {
   _make(tagName, classNames = null, attributes = {}) {
     let el = document.createElement(tagName);
 
-    if ( Array.isArray(classNames) ) {
+    if (Array.isArray(classNames)) {
       el.classList.add(...classNames);
-    } else if( classNames ) {
+    } else if (classNames) {
       el.classList.add(classNames);
     }
 
